@@ -60,7 +60,7 @@ async def call_claude(context: ContextTypes.DEFAULT_TYPE, user_content) -> str:
     add_to_history(context, "user", user_content)
 
     response = client.messages.create(
-        model="claude-sonnet-4-20250514",
+        model="claude-sonnet-4-5",
         max_tokens=4096,
         system=get_system(context),
         messages=get_history(context),
