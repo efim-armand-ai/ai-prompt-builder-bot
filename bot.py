@@ -31,7 +31,22 @@ SYSTEM_BASE = """Ты AI коммерческий директор и промп
 Всегда отвечай на русском языке. Промпты для Kling/Seedance/GPT Image пиши только на английском.
 Следуй всем правилам из приложенного SKILL файла строго.
 
+ВАЖНО — форматирование для Telegram:
+- НЕ используй ## ### заголовки — Telegram их не рендерит как заголовки
+- Вместо ## Заголовок пиши просто: *Заголовок* (жирный через звёздочки)
+- Используй *жирный* для названий секций
+- Используй обычные дефисы - для списков
+- Разделяй секции пустой строкой
+- Числа с точкой для нумерованных списков: 1. 2. 3.
+
 {skill}"""
+
+
+def clean_for_telegram(text: str) -> str:
+    import re
+    text = re.sub(r'^\#{1,3}\s+(.+)$', r'*\1*', text, flags=re.MULTILINE)
+    text = re.sub(r'^-{3,}$', r'─────────────────', text, flags=re.MULTILINE)
+    return text
 
 # ── STATE PER USER ────────────────────────────────────────
 # user_data keys: mode, history
@@ -154,6 +169,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         reply = await call_claude(context, user_text)
         # Telegram max message length is 4096
+        reply = clean_for_telegram(reply)
         if len(reply) > 4000:
             for chunk in [reply[i:i+4000] for i in range(0, len(reply), 4000)]:
                 await update.message.reply_text(chunk)
@@ -199,6 +215,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
 
         reply = await call_claude(context, user_content)
+        reply = clean_for_telegram(reply)
 
         if len(reply) > 4000:
             for chunk in [reply[i:i+4000] for i in range(0, len(reply), 4000)]:
