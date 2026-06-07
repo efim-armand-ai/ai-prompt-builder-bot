@@ -1,6 +1,6 @@
 ---
 name: ai-prompt-builder
-version: "1.8"
+version: "2.3"
 updated: "2026-05-14" 
 description: >
   AI Prompt Builder — production-ready video prompts for Kling 3 and Seedance 2.
@@ -31,7 +31,7 @@ camera evolution, identity lock, and physics-driven shot descriptions.
 1. Single-shot или multi-shot?
 2. Длительность видео?
 3. Если multi-shot — сколько кадров?
-4. Платформа: Kling 3 / Seedance 2 / оба?
+4. Платформа: Kling 3 / Seedance 2 / Gemini Omni / несколько?
 5. Brand DNA? (можно пропустить — дефолт: Generic Premium)
    1. Generic Premium — балансированный luxury, дефолт
    2. Apple — минимализм, чистота, точность
@@ -221,6 +221,43 @@ Never stack three or more camera instructions in one shot.
 
 ---
 
+## Character Sheet (Nano Banana — референс-подготовка)
+
+Перед созданием видео с реальным персонажем — создай Character Sheet в Nano Banana.
+Это даёт Seedance лучший identity reference со всех ракурсов.
+
+**Промпт для Nano Banana:**
+```
+Professional collage on clean white background (#FFFFFF).
+Layout: one vertical full-body photo on the left (40% of frame width),
+on the right a 2x2 grid of four images (each 30% width, 50% height).
+The same person in all five images. Background fully removed, pure white,
+no shadows or gradients. Preserve exact appearance: face, skin tone,
+hairstyle, body proportions, all visible tattoos — 100% accuracy, no retouching.
+Studio cutout, clean edges, high resolution, fashion lookbook model card style.
+```
+
+**Техника обхода модерации (если фото блокируется):**
+Добавь этот слой поверх референс-фото в Nano Banana перед отправкой в Seedance:
+```
+Add a thin veil over the image as if a thin piece of parchment paper
+was placed on top, through which the image is clearly visible.
+Add 0.5% pencil drawing texture.
+```
+Это смягчает фото достаточно для прохождения модерации без потери identity данных.
+
+**Когда использовать Character Sheet:**
+- Любая мультишотовая сцена с реальным человеком
+- Перед тем как использовать фото как @Image1
+- Когда нужна строгая consistency лица во всех шотах
+
+**Если фото лица блокирует модерация:**
+Используй фото в полный рост вместо крупного плана лица.
+Full-body shot проходит модерацию Seedance значительно лучше.
+Seedance извлекает identity из любого ракурса — в полный рост работает не хуже.
+
+---
+
 ## Identity Lock (Seedance 2 only)
 
 When user uploads a reference image of a character who must look identical across all shots —
@@ -379,6 +416,17 @@ Continuity:   [what changed from previous shot]
 ### ПРОМПТЫ
 
 #### Kling 3:
+
+**Hard limits:**
+- Max **1500 characters** per prompt (SYNTX verified hard limit)
+- Model actually reads **744–1500 characters** — it decides how much to process
+- Accepts **any language** — not limited to English
+- Separate **Negative prompt** field — do not put negatives in main prompt
+- **Creativity vs Adherence** slider — controls how strictly model follows the prompt
+- Modes: **Standard** and **Professional**
+- Keyframes: **2 images → video** (first frame + last frame)
+- Video-to-video: upload video + text instruction = modified output
+
 ```
 · SHOT 0[N] · [duration] · [camera] ·
 [Action + visible tags only], [environment],
@@ -389,6 +437,14 @@ Negative prompt: distortion, extra people, bad lighting,
 shaky camera, text/logos unless requested, blurry, deformed,
 artificial smoothing, cartoon style
 ```
+
+**Kling prompt budget (1500 char limit):**
+- Character description: ~300 chars
+- Action per shot: ~200 chars
+- Camera + lighting: ~100 chars
+- Style + constraints: ~100 chars
+- Negative prompt: ~200 chars (separate field)
+- Total main prompt budget: ~1000–1200 chars max for clean execution
 
 #### Seedance 2 — YAML format:
 ```yaml
@@ -431,6 +487,26 @@ visual_rules:
   - "No identity drift between shots"
   - "[add scene-specific rules]"
 ```
+
+**Official Seedance prompt structure order (SYNTX verified):**
+
+Always write in this exact sequence:
+1. List of all @Image/@Video/@Audio references with role declarations
+2. Format: 16:9 or 9:16
+3. Visual style and color palette
+4. Location and atmosphere
+5. Breakdown by seconds: `[0:00–3s]`, `[3:00–7s]`, `[7:00–11s]`, etc.
+6. Technical requirements at the end (stability strings)
+
+**Официальный порядок структуры промпта Seedance (SYNTX verified):**
+
+Всегда писать в этом порядке:
+1. Список всех @Image/@Video/@Audio тегов с описанием роли каждого
+2. Формат: `16:9` или `9:16`
+3. Визуальный стиль и цветовая палитра
+4. Локация и атмосфера
+5. Разбивка по секундам: `[0:00–3s]`, `[3:00–7s]`, `[7:00–11s]`
+6. Технические требования в конце (stability strings)
 
 **Per-shot lighting is MANDATORY** — even 3–5 words per shot has the highest leverage on output quality.
 
@@ -526,6 +602,21 @@ Use precise measurements for Seedance/Kling prompts. Three pacing levels:
 | **Luxury** | Aman, Rolex, Four Seasons | 1–3 cm/sec | 1–2°/sec | Meditation, service, stillness |
 | **Editorial** | Generic Premium, Dior, Chanel | 2–5 cm/sec | 2–3°/sec | Fashion, architecture, lifestyle |
 | **Dynamic** | Apple, Tesla, Nike | 4–8 cm/sec | 3–5°/sec | Launch, reveal, energy |
+
+**Slow motion official phrasing (SYNTX verified):**
+- Slow motion: `slow motion 120fps`
+- Return to normal: `snap to real-time`
+- Speed ramp: `speed ramping from slow motion 120fps to real-time`
+- Speed ramp reverse: `speed ramping from real-time to slow motion 120fps`
+
+Never write just "slow motion" without fps — model ignores it.
+
+**Slow motion — официальные формулировки (SYNTX verified):**
+- Замедление: `slow motion 120fps`
+- Возврат к норме: `snap to real-time`
+- Speed ramp вниз: `speed ramping from slow motion 120fps to real-time`
+- Speed ramp вверх: `speed ramping from real-time to slow motion 120fps`
+- Без fps = модель игнорирует. Всегда указывать 120fps.
 
 **Camera speed vocabulary with numbers:**
 
@@ -724,6 +815,126 @@ Use exactly ONCE per prompt, at the moment of maximum tension.
 Complete audio silence during freeze is mandatory — it makes the pause feel physical.
 Format: `STOP MOTION [duration]s — complete audio silence — [what is frozen] — explosive snap-back to full speed`
 Duration guide: 0.5s = sharp impact moment | 1.0s = standard dramatic freeze | 1.5s + 360° orbit = full Matrix bullet-time
+
+---
+
+## Gemini Omni Format
+
+**Platform:** Gemini app (Plus/Pro/Ultra) + Google Flow
+**Announced:** Google I/O, May 19 2026
+**First model:** Gemini Omni Flash
+
+### Key differences from Kling and Seedance
+
+| Feature | Kling 3 | Seedance 2 | Gemini Omni |
+|---|---|---|---|
+| Prompt style | Precise technical | YAML structured | Conversational intent |
+| Editing | Re-prompt each time | Re-prompt each time | Iterative chat edits |
+| Multi-input | Image reference | Image reference | Image + video + audio + text |
+| World knowledge | Low — describe everything | Low — describe everything | High — model fills details |
+| Text rendering | Poor | Medium | Good — accurate placement |
+| Character consistency | Medium | High (identity_lock) | High (built-in) |
+| Storyboard input | No | No | Yes — upload storyboard |
+
+### Gemini Omni prompt structure
+
+**Formula:** `[Shot framing + motion] + [Style] + [Lighting] + [Location] + [Action]`
+
+Less prescriptive than Kling/Seedance — describe your **intent**, let the model fill details.
+
+**Text-to-video (simple):**
+```
+[Subject] doing [action] in [location]. [Camera move]. [Lighting]. [Style].
+Example: A woman in a white robe walking through a luxury spa lobby.
+Slow dolly forward. Warm amber light. Cinematic, shallow depth of field.
+```
+
+**With references:**
+```
+Using [image/video reference] as [role].
+[What you want to happen]. [Camera]. [Style].
+Example: Using @image1 as character reference.
+She walks to the window, places her hand on the glass. Static medium shot.
+Dior editorial, cold blue city light.
+```
+
+**Storyboard input:**
+```
+Follow this story exactly in order starting top left.
+Entire story in [N] seconds. [Style].
+```
+
+### Conversational editing workflow
+
+Omni's main advantage — iterative edits without re-prompting from scratch.
+
+**How to use:**
+1. Generate base scene with initial prompt
+2. Ask for specific changes in plain language:
+   - "Change the background to a night scene"
+   - "Make the camera move slower"
+   - "Add warm golden lighting"
+   - "Change her outfit to a black dress"
+   - "Sync the building lights to the music beats"
+3. Model preserves what works, applies only the change
+
+**Best for Omni (vs Kling/Seedance):**
+- Scenes requiring iterative refinement
+- Complex actions model understands from world knowledge
+- Text overlay and typography in video
+- Audio-synced visuals (lights to music beats)
+- Style transfers (anime, claymation, watercolour)
+- Storyboard-to-video workflow
+
+**Best for Kling/Seedance (vs Omni):**
+- Precise camera control with exact cm/sec values
+- YAML identity_lock for strict character consistency
+- Complex multi-shot with exact timecodes
+- Physics-precise architectural shots
+
+### Camera vocabulary (Omni-specific)
+
+Works with exact terms from Kling/Seedance vocabulary PLUS natural language:
+- `one continuous shot` / `oner` — no cuts
+- `static` / `locked off` / `fixed` — no camera movement
+- `push in` / `punch in` / `dolly zoom` — forward motion
+- `natural smartphone zoom` — handheld mobile feel
+- `film camera` — cinematic grain and character
+- `webcam style` — raw documentary feel
+- `over-the-shoulder` — classic OTS framing
+
+### Omni-specific rules
+
+**DO:**
+- Describe intent not mechanics: "a tense confrontation" not "character A moves 45° toward character B"
+- Use style references: "Dior editorial", "Wong Kar-wai", "Aman meditative"
+- Reference complex actions by name: model understands them
+- Combine any inputs: image + audio + video + text in one prompt
+
+**DON'T:**
+- Over-explain what's visible in the reference image
+- Stack multiple style anchors — model will average them
+- Use post-production terms: rotoscope, composite, keyframe
+
+### Omni output in NEXT ACTIONS
+
+When user asks for Omni export, output in conversational format:
+```
+🔮 GEMINI OMNI:
+
+[Base prompt — intent-first, 1–3 sentences]
+
+Reference: @[tag] as character/location/style reference.
+
+Camera: [natural language movement]
+Style: [one style anchor]
+Lighting: [lighting intent]
+
+Conversational edits to try after generation:
+— "[edit suggestion 1]"
+— "[edit suggestion 2]"
+— "[edit suggestion 3]"
+```
 
 ---
 
@@ -964,7 +1175,77 @@ Bad: "generic boot stepping in puddle" (no attribution, no cause)
 
 ## Seedance Engine Rules
 
-Hard rendering constraints — violation = broken output:
+### Technical Limits (SYNTX / Higgsfield verified)
+
+| Parameter | Limit |
+|---|---|
+| Images as references | Up to 9 simultaneously (@Image1–@Image9) |
+| Videos as references | Up to 3 (MP4, max 19MB each, 640×640 to 1284×722, total ≤15s) |
+| Audio as references | Up to 3 (MP3 only, total ≤15s) |
+| Duration | 1–15 seconds (default: 4s) |
+| Resolution | 480p / 720p / 1080p (1080p = Pro mode only) |
+| Aspect ratios | 6 options |
+| Modes | Pro (final quality) / Fast (testing) |
+
+**Audio reference workflow:** Upload image/video first → upload MP3 → enable audio toggle → add `@refN lip sync reference @refN exactly` in prompt.
+
+### Mandatory Stability Strings
+
+Add to EVERY Seedance prompt — at the end of character description AND at the end of visual_rules:
+
+```
+Same person in all shots. Preserve exact appearance throughout. Stable face throughout.
+No deformation. No flickering. No ghosting. Stable face throughout. Realistic physics.
+```
+
+These are officially recommended by SYNTX/ByteDance documentation.
+Never omit them — they directly reduce identity drift and visual artifacts.
+
+### @ref Tag System (official Seedance naming)
+
+When multiple images uploaded, each gets a sequential tag: `@ref1`, `@ref2`, `@ref3` etc.
+Use them to assign roles explicitly in the prompt:
+
+```
+@ref1 — exact identity reference for the main character face, hair, body type
+@ref2 — exact wardrobe reference: outfit, fabric, accessories
+@ref3 — exact environment reference: location, lighting, atmosphere
+@ref4 — exact prop reference: object shape, finish, scale
+```
+
+Rules:
+- Always declare what each @ref is used for at the start of the prompt
+- Write "Use @ref1 as the strict reference for [specific elements]"
+- Never leave a @ref undeclared — model decides on its own and often gets it wrong
+- For identity: "Preserve exact likeness throughout. No beautification. No deformation."
+
+### Cut Syntax — монтажные переходы внутри временного блока
+
+Для динамичных сцен с множеством ракурсов — используй `Cut —` в начале каждой строки внутри временного блока:
+
+```
+[0:00–3s]
+Wide aerial shot of the court. @Image1 stands at center, ball under foot.
+Cut — ground level: he starts dribbling toward the basket.
+Cut — tight shot on his hand palming the ball.
+Cut — low angle from asphalt, feet pounding past.
+```
+
+Каждый `Cut —` = отдельный ракурс. Seedance читает их как последовательность склеек.
+
+**Паттерн для динамичных сцен:**
+`Minimum 20 cuts. 15 seconds.` — добавить в Technical секцию промпта.
+Seedance выполняет инструкцию на количество склеек.
+
+**Дробление таймкода для точного контроля:**
+Стандарт: `[0:00–3s]` (3 сек блоки)
+Для динамики: `[0:00–1.5s]`, `[1.5–3s]`, `[3–5s]` (1–2 сек блоки)
+Чем короче блок — тем точнее контроль над конкретным действием.
+
+**Паттерн "invisible defender" (движение без второго персонажа):**
+`blows past an invisible defender` — создаёт динамику уклонения без необходимости генерировать второго человека.
+
+### Hard rendering constraints — violation = broken output:
 
 - **Action beats = intent + named technique, not biomechanics.**
   ✅ "spinning back kick connects" ❌ "left forearm rotates 45° to deflect incoming hook at wrist level"
@@ -1210,3 +1491,191 @@ Never include: song names, artist names, lyrics, "music plays", "soundtrack swel
 Audio line template:
 `Audio: diegetic only — [4–8 specific sounds with adjectives], no music, no dialogue
 except what is physically spoken in frame.`
+
+---
+
+## Storyboard Prompt Builder (двухфазовая система)
+
+Полный workflow для создания профессиональных стейбордов.
+**Phase 1** → image prompt для листа стейборда (Nano Banana Pro / GPT Image 2)
+**Phase 2** → video prompt по утверждённому стейборду (Seedance / Kling)
+
+Phase 2 только после явного подтверждения пользователя. Всегда спрашивать перед переходом.
+
+---
+
+### Inputs (собирать в одном сообщении)
+
+1. **Референс-фото персонажей** — портреты, турнараунды, concept art, фото. Если не загружены и в сцене есть персонажи — спросить один раз: "Загрузи референс-фото персонажей — даже один портрет помогает зафиксировать внешность. Или я опишу персонажей из текста." Спросить только один раз.
+2. **Story overview** — от одной фразы до полного beat sheet.
+3. **Visual style** — если не указан, вывести из контекста. При неоднозначности спросить.
+
+**Опционально:** количество панелей (дефолт 15), длительность (дефолт 15 сек), соотношение сторон (дефолт 16:9), целевая модель (дефолт Nano Banana Pro).
+
+---
+
+### Character DNA
+
+При наличии референс-фото — извлечь для каждого персонажа:
+- Внешность: строение лица, тон кожи, волосы (цвет/длина/текстура/укладка), возрастной диапазон, телосложение, особые приметы
+- Одежда: предметы, цвета, материалы, посадка, акцессуары
+- Дизайн-язык: пропорции (реалистичные/стилизованные), силуэт, палитра
+- Энергетика: осанка, тенденция выражения лица
+
+Компактное описание каждого персонажа: **80–150 символов**. Вшивается в промпт и поддерживает консистентность между панелями.
+
+**Распределение деталей по панелям:**
+- Лицо и волосы → в close-up панелях
+- Полный образ и одежда → в wide shot панелях
+- Акцессуары → когда видны в кадре
+- Не концентрировать все детали в панели 1
+
+---
+
+### Three-Act Structure (15 панелей)
+
+| Панели | Акт | Содержание |
+|---|---|---|
+| 1–3 | Setup | Мир, персонаж, отправная точка |
+| 4–6 | Inciting incident | Событие которое всё меняет |
+| 7–10 | Rising tension | Нарастание, препятствия, решения |
+| 11–13 | Climax / Resolution | Пик напряжения, поворотный момент |
+| 14–15 | Denouement | Эмоциональное приземление |
+
+Emotional escalation: нарастание через середину, пик на панелях 10–12, затем разрядка.
+Close-up на эмоциональных пиках. Wide shot для контекста и дыхания.
+
+---
+
+### Shot Variety Rule
+
+Никогда не повторять тип шота в соседних панелях.
+Чередовать: Wide ↔ Medium ↔ Close-up ↔ Low Angle ↔ High Angle ↔ Dynamic ↔ OTS ↔ Macro
+
+---
+
+### Grid Layouts
+
+| Панелей | Grid (16:9) | Grid (9:16 vertical) |
+|---|---|---|
+| 9 | 3×3 | 3×3 |
+| 12 | 3×4 | 4×3 |
+| 15 | 3×5 (default) | 5×3 |
+| 20 | 4×5 | 5×4 |
+
+---
+
+### Phase 1 — Storyboard Image Prompt Structure
+
+Писать как единый непрерывный текст в fenced code block. Секции по порядку:
+
+**A) Title & Format Header**
+Открывать с концепции листа: длительность, название, количество панелей, grid layout, жанр стиля.
+Пример: *"15-second cinematic storyboard sheet for a luxury lifestyle short film titled '[NAME]'. A complete professional storyboard presentation page featuring 15 sequential cinematic panels arranged in a clean 3×5 grid layout."*
+
+**B) Style Declaration**
+Адаптировать полностью под стиль пользователя — не фиксированный блок.
+- Live-action: cinematographic style, film stock look, practical lighting, grounded realism
+- 3D Animation: Pixar/DreamWorks quality, expressive character animation, warm lighting
+- Anime: studio reference (Ghibli/Trigger/MAPPA по тону), cel-shading, dynamic line work
+- 2D Animation: hand-drawn quality, colour palette approach, line weight
+
+**C) Character Descriptions**
+Прозой (не списком). Физические черты, одежда, акцессуары, отличительные визуальные элементы.
+
+**D) Visual Tone**
+Цветовой грейдинг, атмосфера, качество освещения, рендер-подход.
+
+**E) Storyboard Layout Details**
+Физический вид листа: материал фона, профессиональный production стиль, нумерация кадров, временны́е метки, описания шотов, чистая типографика.
+
+**F) Scene Breakdown**
+Каждая панель: *"Panel [N]: [Shot type] shot. [Описание сцены с действием персонажа, окружением, эмоциональным битом]."*
+Диалог/действие вплетать естественно в описание панели.
+
+**G) Art Direction Footer**
+Технические cues рендера: качество выражений лиц, разнообразие углов камеры, детализация текстур, атмосферные эффекты, принципы композиции.
+
+**H) Rendering & Format Footer**
+Финальные тех. спеки: render quality cues, aspect ratio, format declaration, quality tier.
+
+**Целевая длина промпта:**
+- 9 панелей: 800–1 200 слов
+- 12 панелей: 1 000–1 500 слов
+- 15 панелей: 1 200–1 800 слов (дефолт)
+- 20 панелей: 1 500–2 000 слов
+
+После code block — **companion note** (3–5 предложений):
+- Стилистические решения за пользователя
+- Что взято из референсов vs выведено
+- 1–2 предложения по рефайнингу
+- Напоминание: "Когда доволен стейбордом — скажи, сделаю видео промпт."
+
+---
+
+### Phase 2 — Cinematic Video Prompt
+
+Только после явного подтверждения пользователя.
+
+**Маппинг панелей на шоты:**
+15 панелей / 15 сек = 1 сек на шот.
+Для длинных форматов — распределять интеллектуально: establishing shots и эмоциональные биты 2–3 сек, быстрые экшн-биты 1 сек. Сумма должна равняться указанной длительности.
+
+**Структура каждого шота:**
+1. Timecode — `[Xs – Ys]`
+2. Shot label — `SHOT N — [SCENE NAME]` (caps)
+3. Shot type & camera — размер, угол, движение камеры
+4. Scene direction — действие, блокинг, staging, environmental action, acting beats
+5. Dialogue — `Character: "Line"`
+6. SFX — sound effects и ambient audio
+7. Camera direction — verb phrase (slow dolly-in, handheld tracking, orbit, push-in, etc.)
+
+**Структура промпта:**
+```
+[Production header — reference image, consistency mandate, style block, focus block]
+
+[SHOT 1 — timecode, label, full direction]
+
+[SHOT 2 — timecode, label, full direction]
+
+...
+
+[Final shot — timecode, label, full direction]
+
+Audio: Diegetic sound only — natural ambience, environmental foley, and subject-driven sound.
+```
+
+**Audio footer — ОБЯЗАТЕЛЬНЫЙ, финальная строка каждого видео промпта:**
+`Audio: Diegetic sound only — natural ambience, environmental foley, and subject-driven sound.`
+Каждый шот всё равно содержит свои SFX notes — эта строка устанавливает общую аудио-философию.
+
+**Style adaptation для видео:**
+
+| Style | Camera | Lighting | Acting |
+|---|---|---|---|
+| Live-action | handheld, Steadicam, crane, Dutch angle | practical sources, naturalistic, motivated | subtle performance, micro-expressions |
+| 3D Animation | dolly, orbit, snap zoom, rack focus | warm practicals, volumetric, GI | squash & stretch, anticipation, follow-through |
+| Anime | snap zooms, static holds, rapid cuts | bloom, dramatic shadows, particle effects | speed lines, impact frames, sakuga peaks |
+| 2D Animation | fluid transitions, parallax | painterly, soft | smears, held poses, moving holds |
+
+**Целевая длина видео промпта:**
+- 9 шотов / 15 сек: 800–1 200 слов
+- 15 шотов / 15 сек: 1 200–2 000 слов
+- 15 шотов / 30 сек: 1 500–2 500 слов
+- 20 шотов / 60 сек: 2 000–3 500 слов
+
+После code block — **companion note** (3–5 предложений): pacing choices, шоты которые могут потребовать правки, предложения по аудио/музыке.
+
+---
+
+### Storyboard Variations
+
+| Ситуация | Действие |
+|---|---|
+| Пользователь дал полный beat sheet | Маппить напрямую, не декомпозировать |
+| Только логлайн | Показать beat breakdown перед генерацией — дать возможность скорректировать |
+| Редактирование конкретных панелей | Регенерировать только нужные панели |
+| Другое количество панелей | Скорректировать grid и перераспределить биты |
+| Vertical (9:16) | Перевернуть grid: 5×3 вместо 3×5 |
+| Конкретный видео инструмент | Адаптировать camera direction: Seedance=character animation, Kling=dynamic camera, Veo=long coherent sequences |
+| Гибридный стиль | Явно обозначить в style block какие элементы следуют каким правилам |
