@@ -400,6 +400,15 @@ print_awg() {
   echo
   cat "$f"
   echo
+  local asc="" k
+  for k in Jc Jmin Jmax S1 S2 H1 H2 H3 H4; do
+    asc+=" $(awk -F' *= *' -v k="$k" '$1==k {print $2; exit}' "$f")"
+  done
+  echo "Keenetic/Netcraze: если после импорта параметры маскировки не подхватились,"
+  echo "выполни в веб-CLI роутера (http://192.168.1.1/a; номер WireguardN смотри в списке подключений):"
+  echo "  interface Wireguard0 wireguard asc$asc"
+  echo "  system configuration save"
+  echo
   if command -v qrencode >/dev/null; then
     echo "Или отсканируй QR-код (приложение AmneziaVPN/AmneziaWG):"
     qrencode -t ANSIUTF8 -m 2 < "$f"
