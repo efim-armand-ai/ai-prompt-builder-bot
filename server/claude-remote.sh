@@ -18,7 +18,7 @@ if [[ ${EUID:-$(id -u)} -eq 0 ]]; then
   exit 1
 fi
 if [[ ! -x $CLAUDE ]]; then
-  CLAUDE=$(command -v claude) || { echo "Claude Code не найден. Установи: server/03-claude-code.sh" >&2; exit 1; }
+  CLAUDE=$(command -v claude) || { echo "Claude Code не найден. Установи: server/04-claude-code.sh" >&2; exit 1; }
 fi
 mkdir -p "$DIR"
 

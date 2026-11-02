@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # $HOME в одинарных кавычках ниже намеренно: раскрывается в оболочке ADMIN_USER.
 # shellcheck disable=SC2016
-# Шаг 3. Claude Code на сервере + управление с телефона.
+# Шаг 4. Claude Code на сервере + управление с телефона.
 #
 # Как это работает:
 #   - Claude Code ставится официальным установщиком для пользователя ADMIN_USER
@@ -111,7 +111,7 @@ UNIT
 systemctl daemon-reload
 
 echo
-bold "Шаг 3 готов: Claude Code $(as_user '"$HOME/.local/bin/claude" --version' 2>/dev/null || echo '') установлен."
+bold "Шаг 4 готов: Claude Code $(as_user '"$HOME/.local/bin/claude" --version' 2>/dev/null || echo '') установлен."
 cat <<TXT
   Дальше (один раз), зайдя по SSH как $ADMIN_USER:
     1. claude                → /login, войди подпиской Claude (ссылку открой на телефоне/ноутбуке,
