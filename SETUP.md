@@ -1,5 +1,7 @@
 # AI Prompt Builder Bot — Инструкция по запуску
 
+> Свой сервер в Нидерландах (VPN + Claude Code с управлением с телефона): см. [`server/README.md`](server/README.md).
+
 ## Шаг 1 — Получи Telegram Bot Token
 
 1. Открой Telegram → найди @BotFather

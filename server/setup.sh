@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Полная установка одной командой: защита сервера → VPN → Claude Code.
+#
+#   sudo bash setup.sh
+#
+# Переменные (необязательные), например:
+#   ADMIN_USER=dev SSH_PORT=22 VPN_DEVICES="iphone ipad mac" sudo -E bash setup.sh
+#
+#   ADMIN_USER    пользователь-администратор (по умолчанию dev)
+#   SSH_PORT      порт SSH (по умолчанию 22)
+#   VPN_PORT      порт VPN (по умолчанию 443)
+#   VPN_DEVICES   устройства для VPN через пробел (по умолчанию device1)
+#   REALITY_SNI   сайт для маскировки (по умолчанию www.microsoft.com)
+#   CLONE_REPO    git-репозиторий, который склонировать в ~/projects
+#   SKIP_CLAUDE=1 не ставить Claude Code
+set -euo pipefail
+cd "$(dirname "$0")"
+# shellcheck source=lib.sh
+source ./lib.sh
+
+require_root
+require_supported_os
+
+export ADMIN_USER=${ADMIN_USER:-dev}
+export SSH_PORT=${SSH_PORT:-22}
+export VPN_PORT=${VPN_PORT:-443}
+export VPN_DEVICES=${VPN_DEVICES:-device1}
+export REALITY_SNI=${REALITY_SNI:-}
+export CLONE_REPO=${CLONE_REPO:-}
+
+# Копия скриптов для обслуживания: клон в /root не виден пользователю ADMIN_USER.
+install -d -m 755 /opt/vps-setup
+install -m 755 ./*.sh /opt/vps-setup/
+install -m 644 ./README.md /opt/vps-setup/
+
+bold "=== 1/3 Защита сервера ==="
+bash ./01-harden.sh
+echo
+bold "=== 2/3 VPN (VLESS + Reality) ==="
+bash ./02-vpn.sh
+echo
+if [[ ${SKIP_CLAUDE:-0} != 1 ]]; then
+  bold "=== 3/3 Claude Code ==="
+  bash ./03-claude-code.sh
+fi
+
+IP=$(detect_public_ip)
+echo
+bold "================ ГОТОВО ================"
+echo "SSH:        ssh -p $SSH_PORT $ADMIN_USER@$IP"
+[[ -f /root/.admin-password ]] && echo "sudo-пароль: $(cat /root/.admin-password)   ← сохрани в менеджер паролей"
+echo "VPN:        sudo vpn add <имя> | sudo vpn show <имя> | sudo vpn list"
+echo "Скрипты:    /opt/vps-setup (инструкция: /opt/vps-setup/README.md)"
+echo "Claude:     claude (вход), затем claude-remote — и управляй с телефона"
+warn "Проверь вход по SSH как $ADMIN_USER в НОВОМ окне, прежде чем закрывать это: вход под root уже отключён."
